@@ -1,0 +1,17 @@
+*.ihx
+*.cdb
+*.lk
+*.map
+*.noi
+*.sc
+*.adb
+*.lst
+*.rel
+*.asm
+*.sym
+/.sg
+*.mid
+*.sublime-workspace
+CLAUDE.md
+.claude/
+__pycache__/
