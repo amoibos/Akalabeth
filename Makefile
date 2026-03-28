@@ -67,6 +67,9 @@ libs/strings.rel: libs/strings.c $(HEADERS)
 libs/console.rel: libs/console.c $(HEADERS)
 	$(COMPILER) $(FLAGS) -c -mz80 libs/console.c
 
+libs/keyboard.rel: libs/keyboard.c $(HEADERS)
+	$(COMPILER) $(FLAGS) -c -mz80 libs/keyboard.c
+
 # Asset-Regeln mit Abhängigkeiten
 assets/font.rel: assets/font.c
 	$(COMPILER) $(FLAGS) -c -mz80 -o assets/font.rel assets/font.c
@@ -84,14 +87,14 @@ assets/bpe_texts.rel: assets/bpe_texts.c assets/bpe_texts.h
 	$(COMPILER) $(FLAGS) -c -mz80 -o assets/bpe_texts.rel assets/bpe_texts.c
 
 # IHX-Linking mit allen Abhängigkeiten
-$(OUTPUT).ihx: libs/console.rel libs/strings.rel global.rel views.rel widgets.rel \
+$(OUTPUT).ihx: libs/console.rel libs/keyboard.rel libs/strings.rel global.rel views.rel widgets.rel \
                $(MAINENTRY).rel libbasic.rel fbuffer.rel animation.rel \
                assets/font.rel assets/images.rel assets/audio.rel \
                assets/bpe_table.rel assets/bpe_texts.rel \
                bpe.rel engine.rel engine2.rel monster.rel
 	$(COMPILER) $(FLAGS) -o $(OUTPUT).ihx -mz80 --no-std-crt0 --data-loc 0xC000 \
 		crt0/crt0_sg.rel PSGlib/PSGlib.rel SGlib/SGlib.rel \
-		console.rel global.rel strings.rel engine.rel engine2.rel monster.rel views.rel widgets.rel \
+		console.rel keyboard.rel global.rel strings.rel engine.rel engine2.rel monster.rel views.rel widgets.rel \
 		$(MAINENTRY).rel assets/font.rel assets/images.rel assets/audio.rel \
 		assets/bpe_table.rel assets/bpe_texts.rel bpe.rel \
 		libbasic.rel fbuffer.rel animation.rel

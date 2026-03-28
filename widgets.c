@@ -1,5 +1,6 @@
 #include "widgets.h"
 #include "libbasic.h"
+#include "libs/keyboard.h"
 
 void (*timer_callback)(void);
 
@@ -20,9 +21,9 @@ unsigned char menu(unsigned char count, unsigned char offset, _Bool horizontal,
     unsigned char old_color = state.fgcolor;
 
     if (highlight) {
-        /* Initial highlight: color all items, mark active one yellow. */
+        /* Initial highlight: color all items, mark active one white. */
         for (unsigned char i = 0; i < count; ++i) {
-            state.fgcolor = (i == selection) ? SG_COLOR_DARK_YELLOW : old_color;
+            state.fgcolor = (i == selection) ? SG_COLOR_WHITE : old_color;
             if (horizontal)
                 locateyx(start_y, start_x + i * offset + 1);
             else
@@ -45,9 +46,9 @@ unsigned char menu(unsigned char count, unsigned char offset, _Bool horizontal,
             initSprites();
             if (cursor_visible) {
                 if (horizontal)
-                    addSprite((start_x + selection * offset) * 8, start_y * 8, 11, SG_COLOR_DARK_YELLOW);
+                    addSprite((start_x + selection * offset) * 8, start_y * 8, 11, SG_COLOR_WHITE);
                 else
-                    addSprite(start_x * 8, (start_y + selection * offset) * 8, 11, SG_COLOR_DARK_YELLOW);
+                    addSprite(start_x * 8, (start_y + selection * offset) * 8, 11, SG_COLOR_WHITE);
             }
             finalizeSprites();
             copySpritestoSAT();
@@ -58,6 +59,7 @@ unsigned char menu(unsigned char count, unsigned char offset, _Bool horizontal,
             }
         }
 
+        scanKeyboardJoypad();
         unsigned int keys = map_b_to_a(keypressed());
         unsigned char prev = selection;
 
@@ -84,7 +86,7 @@ unsigned char menu(unsigned char count, unsigned char offset, _Bool horizontal,
         }
 
         if (highlight && selection != prev) {
-            /* Recolor previous item back to normal, new item to yellow. */
+            /* Recolor previous item back to normal, new item to white. */
             state.fgcolor = old_color;
             if (horizontal)
                 locateyx(start_y, start_x + prev * offset + 1);
@@ -92,7 +94,7 @@ unsigned char menu(unsigned char count, unsigned char offset, _Bool horizontal,
                 locateyx(start_y + prev * offset, start_x + 1);
             print(labels[prev]);
 
-            state.fgcolor = SG_COLOR_DARK_YELLOW;
+            state.fgcolor = SG_COLOR_WHITE;
             if (horizontal)
                 locateyx(start_y, start_x + selection * offset + 1);
             else
@@ -120,12 +122,13 @@ void SetTimerCallback (void (*theHandlerFunction)(void)) __z88dk_fastcall {
 
 unsigned int pressed_anything(void) {
     unsigned int button=0;
+    unsigned int key=0;
 
     scanKeyboardJoypad();
     button = getKeyboardJoypadStatus();
-    SG_getKeycodes(&button, 1);
+    SG_getKeycodes(&key, 1);
     
-    if (SG_queryPauseRequested()) {
+    if (SG_queryPauseRequested() || (keytoa(key) == 'p')) {
         SG_resetPauseRequest();
         button |= CARTRIDGE_SLOT;
     }

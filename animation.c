@@ -22,10 +22,6 @@ void animate_quarterly(eScreens screen) {
 			sprite = get_sprite_data(all_sprites[pos]);
 
 			switch(screen) {
-				case ScreenTitle: {
-
-					break;
-				}
 				case ScreenAppendix: case ScreenControls: case ScreenStory: case ScreenExplain: case ScreenExplain2: {
 					print_font(sprite.location.x, sprite.location.y, PRESS_A_KEY[sprite.index][animation_frame]);
 					break;

@@ -483,7 +483,7 @@ static void draw_compass(void) {
     else if (movdir.y == -1) dir[0] = 'N';
     else                     dir[0] = 'S';
 
-    state.fgcolor = SG_COLOR_LIGHT_YELLOW;
+    state.fgcolor = SG_COLOR_WHITE;
     locateyx(0, 15);
     print(dir);
     state.fgcolor = old_color;
@@ -728,7 +728,7 @@ void show_player_stat(void) {
     blank_right_from_cursor(NO_DELAY);
 
     locateyx(22, 22);
-    print_labeled_int(_HP, player.stats[sHIT_POINTS]);
+    print_labeled_int(_HP, player.stats[sHIT_POINTS] < 0 ? 0 : player.stats[sHIT_POINTS]);
     blank_right_from_cursor(NO_DELAY);
 
     locateyx(23, 22);
@@ -942,7 +942,7 @@ _Bool handle_attack(unsigned char *lk) {
     do {
         retry = 0;
         print("ATTACK\n");
-        blankArea(0, 15, TEXTCONSOLE_MAX_X - 1, 21);
+        blankArea(0, 15, SCROLL_COL_END, 21);
         locateyx(15, 0);
         bpe_print(BPE_CHOOSE_WEAPON);
         locateyx(16, 2);
@@ -954,7 +954,7 @@ _Bool handle_attack(unsigned char *lk) {
         locateyx(16, 0);
         sel = menu(iAMULET - iRAPIER + 2, 1, VERTICAL, HIGHLIGHT_OFF, 0, s_last_weapon_sel);
         weapon_item = (sel == 0) ? iFOOD : (sel - 1 + iRAPIER);
-        blankArea(0, 15, TEXTCONSOLE_MAX_X - 1, 21);
+        blankArea(0, 15, SCROLL_COL_END, 21);
 
         if (weapon_item == iFOOD) {
             /* HANDS — no weapon, attack_value stays 0 */
@@ -1005,7 +1005,7 @@ _Bool handle_attack(unsigned char *lk) {
                 if (player.playerclass == pcFIGHTER) {
                     amulet_key = rnd_range(4) + 1 + '0';
                 } else {
-                    blankArea(0, 15, TEXTCONSOLE_MAX_X - 1, 21);
+                    blankArea(0, 15, SCROLL_COL_END, 21);
                     locateyx(15, 0);
                     bpe_print(BPE_AMULET_CHOOSE);
                     locateyx(16, 2); print("1-LADDER-UP");
@@ -1014,7 +1014,7 @@ _Bool handle_attack(unsigned char *lk) {
                     locateyx(19, 2); print("4-BAD??");
                     locateyx(16, 0);
                     amulet_key = menu(4, 1, VERTICAL, HIGHLIGHT_OFF, 0, 0) + '1';
-                    blankArea(0, 15, TEXTCONSOLE_MAX_X - 1, 21);
+                    blankArea(0, 15, SCROLL_COL_END, 21);
                     if (rnd_pct(25)) {
                         bpe_print(BPE_LAST_CHARGE);
                         --player.inventory[iAMULET];
@@ -1088,8 +1088,7 @@ void post_turn(void) {
     if (player.inventory[iFOOD] < 0) {
         player.stats[sHIT_POINTS] = 0;
         bpe_print(BPE_STARVED);
-    } else
-        show_player_stat();
+    }
     if (player.stats[sHIT_POINTS] <= 0) {
         show_death_screen();
         return;
@@ -1097,12 +1096,11 @@ void post_turn(void) {
     if (player.floor == OVERWORLD_LEVEL)
         blankArea(0, 20, TEXTCONSOLE_MAX_X - 1, TEXTCONSOLE_MAX_Y - 1);
     fight_monster();
+    show_player_stat();
     if (player.stats[sHIT_POINTS] <= 0) {
         show_death_screen();
         return;
     }
-
-    show_player_stat();
 }
 
 void gameloop(void) {
@@ -1116,6 +1114,7 @@ void gameloop(void) {
     for (;;) {
         while (1) {
             //wait(FRAME_RATE / 2);
+            displayOff();
             if (player.floor == OVERWORLD_LEVEL) {
                 blankArea(0, 20, TEXTCONSOLE_MAX_X - 1,
                     TEXTCONSOLE_MAX_Y - 1);
@@ -1129,6 +1128,7 @@ void gameloop(void) {
                 locateyx(SCROLL_ROW_END, 0);
                 bpe_print(BPE_COMMAND_PROMPT);
             }
+            displayOn();
 
             key = wait_for_key(NO_SPECIFIC_KEY);
             if (!key) { //pressed pause key
@@ -1242,8 +1242,22 @@ void gameloop(void) {
                 handle_enter_exit(&lk); break;
             } else if (key & PORT_A_KEY_2) {
                 if (player.floor != OVERWORLD_LEVEL) {
-                    if (handle_attack(&lk))
-                        break;
+                    _Bool any_monster = 0;
+                    for (unsigned char di = 1; di <= DUNGEON_MAX; ++di) {
+                        unsigned char cx = dunloc.x + movdir.x * di;
+                        unsigned char cy = dunloc.y + movdir.y * di;
+                        unsigned char cell = dungeon_obj[cx][cy];
+                        if (cell == oWALL)
+                            break;
+                        if (dungeon_mon[cx][cy]) {
+                            any_monster = 1;
+                            break;
+                        }
+                    }
+                    if (any_monster) {
+                        if (handle_attack(&lk))
+                            break;
+                    }
                     break;
                 }
                 continue;
@@ -1329,6 +1343,9 @@ static void pregame_dissolve(void) {
 
 void pregame(void) {
     blank_screen();
+    locateyx(0, TEXTCONSOLE_MAX_X - strlen(VERSION));
+    print(VERSION);
+
     locateyx(15, 6);
     bpe_print(BPE_CREDITS_1);
     locateyx(16, 6);
@@ -1345,6 +1362,4 @@ void pregame(void) {
     bpe_print(BPE_SUBTITLE);
 
     pregame_dissolve();
-
-    gameloop();
 }

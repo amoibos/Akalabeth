@@ -35,5 +35,6 @@ void main(void) {
         PSGStop();
         view_shop();
         pregame();
+        gameloop();
     }
 }

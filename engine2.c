@@ -5,10 +5,15 @@
 #include "global.h"
 #include "libbasic.h"
 #include "libs/console.h"
+#include "libs/keyboard.h"
 #include "monster.h"
 #include "widgets.h"
 #include "bpe.h"
 #include "assets/bpe_texts.h"
+
+/* Shared itoa scratch buffer - 7 bytes is enough for any 16-bit integer.
+   Never used concurrently (all callers are non-reentrant). */
+static char s_itoa_buf[7];
 
 void reset_sprites(void) {
 
@@ -61,19 +66,25 @@ void timer(void) {
 }
 
 unsigned int wait_for_key(unsigned int keys) {
-    while (keypressed()) wait(1);   /* Joypad-Loslassen abwarten */
-    scanKeyboardJoypad();           /* Tastatur-Zustand als Basis setzen */
+    unsigned int key=0;
+
+    while (keypressed()) {
+        wait(1);
+        scanKeyboardJoypad();
+    }
     while (1) {
         wait(1);
         if (animation_refresh && timer_callback) {
             animation_refresh = 0;
             timer_callback();
         }
-        if (SG_queryPauseRequested()) {
+
+        SG_getKeycodes(&key, 1);
+        if (SG_queryPauseRequested() || (keytoa(key) == 'p')) {
             SG_resetPauseRequest();
             return 0;
         }
-        
+        scanKeyboardJoypad();
         unsigned int pressed = map_b_to_a(keypressed());
         if (pressed) {
             if (!keys || (pressed & keys))
@@ -163,7 +174,7 @@ void assign_quest(void) {
 }
 
 int view_lord_british_castle(void) {
-    char output[TEXTCONSOLE_MAX_X+1];
+    char *output = s_itoa_buf;
     eScreens current = ScreenCastle;
     unsigned char old_color = state.fgcolor;
 
@@ -253,8 +264,7 @@ int view_lord_british_castle(void) {
 
 //60080
 void view_stats(_Bool refresh_only) {
-    char output[TEXTCONSOLE_MAX_X+1];
-    output[0] = '\0';
+    char *output = s_itoa_buf;
     unsigned char old_color = state.fgcolor;
 
     //reduce flickering, update only values which could be changed
@@ -433,7 +443,7 @@ void view_shop(void) {
         print(ITEMS[y]);
     }
 
-    old_color=state.fgcolor;
+    old_color = state.fgcolor;
     state.fgcolor = SG_COLOR_WHITE;
     locateyx(9, 17);
     print("QUIT");
