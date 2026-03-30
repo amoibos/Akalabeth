@@ -59,19 +59,20 @@ unsigned char menu(unsigned char count, unsigned char offset, _Bool horizontal,
             }
         }
 
-        scanKeyboardJoypad();
-        unsigned int keys = map_b_to_a(keypressed());
+        unsigned int keys = read_input_pressed();
         unsigned char prev = selection;
 
         if (horizontal) {
             if (keys & PORT_A_KEY_LEFT) {
                 if (selection > 0)
                     --selection;
-                cursor_visible = 1; blink_timer = 0;
+                cursor_visible = 1; 
+                blink_timer = 0;
             } else if (keys & PORT_A_KEY_RIGHT) {
                 if (selection < count - 1)
                     ++selection;
-                cursor_visible = 1; blink_timer = 0;
+                cursor_visible = 1; 
+                blink_timer = 0;
             }
         } else {
             if (keys & PORT_A_KEY_UP) {
@@ -120,12 +121,12 @@ void SetTimerCallback (void (*theHandlerFunction)(void)) __z88dk_fastcall {
     timer_callback=theHandlerFunction;
 }
 
+//nonblocking check if any key or controller button is currently pressed (used to skip animations)
 unsigned int pressed_anything(void) {
     unsigned int button=0;
     unsigned int key=0;
 
-    scanKeyboardJoypad();
-    button = getKeyboardJoypadStatus();
+    button = read_input_status();
     SG_getKeycodes(&key, 1);
     
     if (SG_queryPauseRequested() || (keytoa(key) == 'p')) {

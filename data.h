@@ -1,7 +1,7 @@
 #ifndef DATA_H
 #define DATA_H
 
-#define VERSION_STRING              "0.8.1"
+#define VERSION_STRING              "0.8.2"
 
 #ifdef DEMO
 #define VERSION                     "DEMO " VERSION_STRING

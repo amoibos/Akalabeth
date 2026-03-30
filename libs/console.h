@@ -57,6 +57,7 @@ void clear_screen(void);
 #define scanKeyboardJoypad	SG_scanKeyboardJoypad
 #define getKeyboardJoypadPressed SG_getKeyboardJoypadPressed
 #define getKeyboardJoypadStatus SG_getKeyboardJoypadStatus
+#define readkey SG_getKeysStatus
 #define copySpritestoSAT SG_copySpritestoSAT
 #define putPixel SG_putPixel
 #define setBackdropColor SG_setBackdropColor

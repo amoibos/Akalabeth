@@ -67,4 +67,25 @@ static inline unsigned int map_b_to_a(unsigned int k) {
     return k;
 }
 
+/* Edge-triggered: neu gedrückte Tasten von Controller oder Tastatur.
+   scanKeyboardJoypad() wird immer aufgerufen, damit KBDPreviousKeysStatus
+   aktuell bleibt und in Folgeframes keine falschen Edges erzeugt werden. */
+static inline unsigned int read_input_pressed(void) {
+    unsigned int controller = map_b_to_a(keypressed());
+    scanKeyboardJoypad();
+    if (controller) {
+        wait(1);
+        return controller;
+    }
+    return map_b_to_a(getKeyboardJoypadPressed());
+}
+
+/* Level-triggered: aktuell gehaltene Tasten von Controller oder Tastatur. */
+static inline unsigned int read_input_status(void) {
+    unsigned int s = map_b_to_a(readkey());
+    scanKeyboardJoypad();
+    s |= map_b_to_a(getKeyboardJoypadStatus());
+    return s;
+}
+
 #endif

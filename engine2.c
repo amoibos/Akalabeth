@@ -68,7 +68,7 @@ void timer(void) {
 unsigned int wait_for_key(unsigned int keys) {
     unsigned int key=0;
 
-    while (keypressed()) {
+    while (getKeyboardJoypadPressed() || keypressed()) {
         wait(1);
         scanKeyboardJoypad();
     }
@@ -84,9 +84,9 @@ unsigned int wait_for_key(unsigned int keys) {
             SG_resetPauseRequest();
             return 0;
         }
-        scanKeyboardJoypad();
-        unsigned int pressed = map_b_to_a(keypressed());
+        unsigned int pressed = read_input_pressed();
         if (pressed) {
+            wait(1);
             if (!keys || (pressed & keys))
                 return pressed;
         }
@@ -295,7 +295,11 @@ void view_stats(_Bool refresh_only) {
 
         //show amount of item
         locateyx(-1, 17);
-        print(SEGA_itoa(player.inventory[x], output));print("-");
+        unsigned char ilen = strlen(SEGA_itoa(player.inventory[x], output));
+        print(output);
+        print("-");
+        if (ilen < 3)
+            blankArea(17 + ilen + 1, 3 + x, 20, 3 + x);
 
         //show item name
         if (!refresh_only) {
